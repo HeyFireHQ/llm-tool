@@ -1,14 +1,53 @@
-use pyo3::prelude::*;
 
-/// Formats the sum of two numbers as string.
-// #[pyfunction]
-// fn sum_as_string(a: usize, b: usize) -> PyResult<String> {
-//     Ok((a + b).to_string())
-// }
+use pyo3::prelude::*;
+use regex::Regex;
+use std::collections::HashMap;
+
+#[pyclass]
+pub struct ParsedDocstring {
+    #[pyo3(get, set)]
+    description: String,
+    #[pyo3(get, set)]
+    returns: String,
+    #[pyo3(get, set)]
+    params: HashMap<String, String>,
+}
+
+#[pyfunction]
+pub fn parse_docstring(docstring: &str) -> ParsedDocstring {
+
+    // TODO: check for docstring format before parsing
+
+    let desc_re = Regex::new(r"([^:]*)").unwrap();
+    let param_re = Regex::new(r"(?::param (?<name>[A-Za-z_]*):(?<desc>[^:]*))").unwrap();
+    let return_re = Regex::new(r"(?::return\w*:(?<desc>[^:]*))").unwrap();
+  
+    let description: String = String::from(desc_re.captures(docstring).unwrap()[0].trim());
+    
+    let mut params = HashMap::new();
+    let _ = param_re.captures_iter(docstring).map(|cap| {
+        let name = cap.name("name").unwrap().as_str();
+        let desc = cap.name("desc").unwrap().as_str().trim();
+        params.insert(String::from(name), String::from(desc));
+    }).collect::<Vec<_>>();
+    let returns: String =  String::from(return_re.captures(docstring).unwrap()[0].trim());
+
+    ParsedDocstring {
+        description, 
+        returns,
+        params,
+    }
+
+}
 
 /// A Python module implemented in Rust.
 #[pymodule]
 fn llm_tool(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    // m.add_function(wrap_pyfunction!(sum_as_string, m)?)?;
+    m.add_function(wrap_pyfunction!(parse_docstring, m)?)?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
 }
