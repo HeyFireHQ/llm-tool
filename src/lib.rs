@@ -16,8 +16,6 @@ pub struct ParsedDocstring {
 #[pyfunction]
 pub fn parse_docstring(docstring: &str) -> ParsedDocstring {
 
-    // TODO: check for docstring format before parsing
-
     let desc_re = Regex::new(r"([^:]*)").unwrap();
     let param_re = Regex::new(r"(?::param (?<name>[A-Za-z_]*):(?<desc>[^:]*))").unwrap();
     let return_re = Regex::new(r"(?::return\w*:(?<desc>[^:]*))").unwrap();
@@ -25,11 +23,12 @@ pub fn parse_docstring(docstring: &str) -> ParsedDocstring {
     let description: String = String::from(desc_re.captures(docstring).unwrap()[0].trim());
     
     let mut params = HashMap::new();
-    let _ = param_re.captures_iter(docstring).map(|cap| {
+    for cap in param_re.captures_iter(docstring) {
         let name = cap.name("name").unwrap().as_str();
         let desc = cap.name("desc").unwrap().as_str().trim();
         params.insert(String::from(name), String::from(desc));
-    }).collect::<Vec<_>>();
+    }
+
     let returns: String =  String::from(return_re.captures(docstring).unwrap()[0].trim());
 
     ParsedDocstring {
