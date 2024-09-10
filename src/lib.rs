@@ -29,7 +29,10 @@ pub fn parse_docstring(docstring: &str) -> ParsedDocstring {
         params.insert(String::from(name), String::from(desc));
     }
 
-    let returns: String =  String::from(return_re.captures(docstring).unwrap()[0].trim());
+    let returns: String = String::from(match return_re.captures(docstring) {
+        Some(cap) => cap.name("desc").unwrap().as_str().trim(),
+        None => "",
+    });
 
     ParsedDocstring {
         description, 
