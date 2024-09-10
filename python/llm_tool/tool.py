@@ -1,7 +1,13 @@
 from llm_tool import llm_tool
 
 import inspect
+from dataclasses import dataclass
 from typing import Callable, Union, _BaseGenericAlias
+
+@dataclass
+class GlobalToolConfig:
+    desc_required: bool = False
+    return_required: bool = False
 
 class DocStringException(Exception):
     def __init__(self, message: str):
@@ -42,7 +48,9 @@ def _get_type_name(type_: Union[type, _BaseGenericAlias]) -> str:
 
     raise TypeParsingException(f"Failed to parse type: {type_}")
 
-def tool(desc_required: bool = False, return_required: bool = False) -> Callable[[Callable], DefinedFunction]:
+def tool(desc_required: Union[bool, None] = None, return_required: Union[bool, None] = None) -> Callable[[Callable], DefinedFunction]:
+    desc_required = desc_required if desc_required is not None else GlobalToolConfig.desc_required
+    return_required = return_required if return_required is not None else GlobalToolConfig.return_required
 
     def inner(func: Callable) -> DefinedFunction:
         parsed = None
