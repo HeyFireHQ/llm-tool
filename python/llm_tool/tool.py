@@ -72,7 +72,7 @@ def tool(desc_required: Union[bool, None] = None, return_required: Union[bool, N
 
                 is_required: bool = value._default is inspect._empty 
 
-                if desc_required and parsed.params.get(key, None) is None:
+                if desc_required and (not parsed or parsed.params.get(key, None) is None):
                     raise DocStringException(f"Parameter `{key}` description not found in docstring of `{func.__name__}` function signature.")
                 
                 # param_anno: Union[type, _BaseGenericAlias]
@@ -104,11 +104,13 @@ def tool(desc_required: Union[bool, None] = None, return_required: Union[bool, N
                     description += f"\n\nReturn Type: `{return_type}`"
 
                 elif return_required:
-                    raise DocStringException(f"Return type not found in docstring of `{func.__name__}` function signature.")
+                    raise DocStringException(f"Return type not found in function `{func.__name__}`.")
 
                 description += f"\n\nReturn Description: {parsed.returns}"
             elif return_required:
                 raise DocStringException(f"Return description not found in docstring of `{func.__name__}` function signature.")
+        elif return_required:
+            raise DocStringException(f"Return description not found in docstring of `{func.__name__}` function signature.")
 
         out = {
             "type": "function",
