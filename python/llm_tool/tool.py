@@ -34,7 +34,7 @@ class DefinedFunction():
     def definition(self):
         return self._definition
 
-def _get_type_name(type_: Union[type, _BaseGenericAlias]) -> str:
+def get_type_name(type_: Union[type, _BaseGenericAlias, None]) -> str:
     
     # _BaseGenericAlias
     if hasattr(type_, '_name'):
@@ -42,9 +42,8 @@ def _get_type_name(type_: Union[type, _BaseGenericAlias]) -> str:
     # implements __name__
     elif hasattr(type_, '__name__'):
         return type_.__name__
-    # implements __str__
-    elif hasattr(type_, '__str__'):
-        return type_.__str__()
+    elif type_ is None:
+        return 'None'
 
     raise TypeParsingException(f"Failed to parse type: {type_}")
 
@@ -77,7 +76,7 @@ def tool(desc_required: Union[bool, None] = None, return_required: Union[bool, N
                 
                 # param_anno: Union[type, _BaseGenericAlias]
                 params["properties"][key] = {
-                    "type": _get_type_name(param_anno),
+                    "type": get_type_name(param_anno),
                     "description": parsed.params.get(key, "") if parsed else "",
                 }
 
@@ -97,10 +96,11 @@ def tool(desc_required: Union[bool, None] = None, return_required: Union[bool, N
             description += parsed.description if parsed.description else "" 
 
             if parsed.returns:
-                return_anno = inspect.signature(func).return_annotation
+                return_anno = inspect.signature(func).return_annotation    
+                # if a function returns None then return_anno is None instead of NoneType
                 
                 if return_anno is not inspect._empty:
-                    return_type = _get_type_name(return_anno)
+                    return_type = get_type_name(return_anno)
                     description += f"\n\nReturn Type: `{return_type}`"
 
                 elif return_required:
