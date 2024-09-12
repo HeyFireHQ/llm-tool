@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 import unittest
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Tuple
 
-from llm_tool import tool, GlobalToolConfig, DocStringException, TypeParsingException
+from llm_tool import tool, GlobalToolConfig, DocStringException, DefinedFunction, get_type_name, TypeParsingException
 
 class TestTool(unittest.TestCase):
 
@@ -87,14 +87,14 @@ class TestTool(unittest.TestCase):
         def test(a: str, b) -> None:
             pass
 
-        with self.assertRaisesRegex(DocStringException, "No type found for parameter `[a-zA-Z_]*` in function `[a-zA-Z_]*`"):
+        with self.assertRaisesRegex(DocStringException, "No type found for parameter `[a-zA-Z\d_]*` in function `[a-zA-Z\d_]*`"):
             tool()(test)
 
     def test_param_desc_exception(self):
         def test(a: str) -> None:
            pass
 
-        with self.assertRaisesRegex(DocStringException, "Parameter `[a-zA-Z_]*` description not found in docstring of `[a-zA-Z_]*` function signature."):
+        with self.assertRaisesRegex(DocStringException, "Parameter `[a-zA-Z\d_]*` description not found in docstring of `[a-zA-Z\d_]*` function signature."):
             tool(desc_required=True)(test)
 
     def test_return_type_required_exception(self):
@@ -104,15 +104,49 @@ class TestTool(unittest.TestCase):
             """
             pass
 
-        with self.assertRaisesRegex(DocStringException, "Return type not found in function `[a-zA-Z_]*`."):
+        with self.assertRaisesRegex(DocStringException, "Return type not found in function `[a-zA-Z\d_]*`."):
             tool(return_required=True)(test)
 
     def test_return_desc_required_exception(self):
         def test(a: str) -> int:
             pass
 
-        with  self.assertRaisesRegex(DocStringException, "Return description not found in docstring of `[a-zA-Z_]*` function signature."):
+        with  self.assertRaisesRegex(DocStringException, "Return description not found in docstring of `[a-zA-Z\d_]*` function signature."):
             tool(return_required=True)(test)
+
+class TestDefinedFunction(unittest.TestCase):
+    
+    def test_call(self):
+        def test(a: int, b: int) -> List[int]:
+            return [a, b]
+
+        definedFunction = DefinedFunction(test)
+        self.assertEqual(definedFunction(1, b=2), [1, 2])
+
+class TestGlobalToolConfig(unittest.TestCase):
+    def test_default(self):
+        self.assertEqual(GlobalToolConfig.desc_required, False)
+        self.assertEqual(GlobalToolConfig.return_required, False)
+
+class TestGetTypeName(unittest.TestCase):
+    def test_primitives(self):
+        self.assertEqual(get_type_name(int), "int")
+        self.assertEqual(get_type_name(str), "str")
+        self.assertEqual(get_type_name(float), "float")
+        self.assertEqual(get_type_name(bool), "bool")
+
+    def test_typing_types(self):
+        self.assertEqual(get_type_name(List), "List")
+        self.assertEqual(get_type_name(Dict), "Dict")
+        self.assertEqual(get_type_name(Union), "Union")
+        self.assertEqual(get_type_name(Tuple), "Tuple")
+
+    def test_none(self):
+        self.assertEqual(get_type_name(None), "None")
+
+    def test_type_parsing_exception(self):
+        with self.assertRaisesRegex(TypeParsingException, "Failed to parse type: 1"):
+            get_type_name(1)
 
 if __name__ == '__main__':
     unittest.main()
