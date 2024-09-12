@@ -1,1 +1,1 @@
-from .tool import tool, GlobalToolConfig
+from .tool import * 
