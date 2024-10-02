@@ -64,7 +64,10 @@ def tool(desc_required: Union[bool, None] = None, return_required: Union[bool, N
         if func_params := inspect.signature(func).parameters:
             # ignore error
             for key, value in func_params.items():
-                
+
+                if key == 'self':
+                    continue
+
                 param_anno: Union[type, _BaseGenericAlias, inspect._empty] = value.annotation
                 if param_anno is inspect._empty:
                     raise DocStringException(f"No type found for parameter `{key}` in function `{func.__name__}`")
