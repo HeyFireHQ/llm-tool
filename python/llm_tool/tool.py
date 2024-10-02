@@ -19,15 +19,19 @@ class TypeParsingException(Exception):
 
 class DefinedFunction():
 
-    def __init__(self, func, definition = {}) -> None:
+    def __init__(self, func, definition = {}, context = None) -> None:
         """
         A function that has been defined in the llm_tool tool. 
         """
 
         self._func = func
         self._definition = definition
+        self._context = context
 
     def __call__(self, *args, **kwargs):
+        if self._context:
+            return self._func(self._context, *args, **kwargs)
+
         return self._func(*args, **kwargs)
 
     @property
@@ -47,7 +51,7 @@ def get_type_name(type_: Union[type, _BaseGenericAlias, None]) -> str:
 
     raise TypeParsingException(f"Failed to parse type: {type_}")
 
-def tool(desc_required: Union[bool, None] = None, return_required: Union[bool, None] = None) -> Callable[[Callable], DefinedFunction]:
+def tool(context = None, desc_required: Union[bool, None] = None, return_required: Union[bool, None] = None) -> Callable[[Callable], DefinedFunction]:
     desc_required = desc_required if desc_required is not None else GlobalToolConfig.desc_required
     return_required = return_required if return_required is not None else GlobalToolConfig.return_required
 
@@ -62,7 +66,7 @@ def tool(desc_required: Union[bool, None] = None, return_required: Union[bool, N
         }
 
         if func_params := inspect.signature(func).parameters:
-            # ignore error
+
             for key, value in func_params.items():
 
                 if key == 'self':
@@ -124,7 +128,7 @@ def tool(desc_required: Union[bool, None] = None, return_required: Union[bool, N
             }
         }
 
-        func = DefinedFunction(func, out)
+        func = DefinedFunction(func, out, context)
         return func
 
     return inner

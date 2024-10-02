@@ -7,9 +7,11 @@ from llm_tool import tool, GlobalToolConfig, DocStringException, DefinedFunction
 
 class TestTool(unittest.TestCase):
 
+    maxDiff = None
+
     def test_best_case(self):
         @tool()
-        def test(a: str, b: int, c: Dict[str, str], d: List[str], e: bool, f: float, g: List[Dict[str, str]], h: Union[bool, None], i: Union[Dict[str, str], None] = None) -> Dict:
+        def test(a: str, b: int, c: Dict[str, str], d: List[bool], e: bool, f: float, g: List[Dict[str, str]], h: List[str] = ["1", "2", "3"]) -> Dict:
             """
             This is a test function.
             :param a: this is the description for a
@@ -25,54 +27,54 @@ class TestTool(unittest.TestCase):
             """
             pass
 
-            self.assertEqual(test.definition, {
-                'type': 'function',
-                'function': {
-                    'name': 'test',
-                    'description': 'This is a test function.\n\nReturn Type: Dict\n\nReturns: this is the description for reteurn',
-                    'parameters': {
-                        'type': 'object',
-                        'properties': {
-                            'a': {
-                                'type': 'str',
-                                'description': 'this is the description for a',
-                            },
-                            'b': {
-                                'type': 'int',
-                                'description': 'this is the description for b',
-                            },
-                            'c': {
-                                'type': 'Dict',
-                                'description': 'this is the description for c',
-                            },
-                            'd': {
-                                'type': 'List',
-                                'description': 'this is the description for d. Defaults to ["1", "2", "3"]',
-                            },
-                            'e': {
-                                'type': 'bool',
-                                'description': 'this is the description for e',
-                            },
-                            'f': {
-                                'type': 'float',
-                                'description': 'this is the description for f',
-                            },
-                            'g': {
-                                'type': 'List',
-                                'description': 'this is the description for g',
-                            },
-                            'h': {
-                                'type': 'Union',
-                                'description': 'this is the description for h',
-                            },
-                            'i': {
-                                'type': 'Union',
-                                'description': 'this is the description for i. Defaults to None',
-                            },
-
+        self.assertEqual(test.definition, {
+            'type': 'function',
+            'function': {
+                'name': 'test',
+                'description': 'This is a test function.\n\nReturn Type: `Dict`\n\nReturn Description: this is the description for return',
+                'parameters': {
+                    'type': 'object',
+                    'properties': {
+                        'a': {
+                            'type': 'str',
+                            'description': 'this is the description for a',
                         },
-                        'required': ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'],
-                    }
+                        'b': {
+                            'type': 'int',
+                            'description': 'this is the description for b',
+                        },
+                        'c': {
+                            'type': 'Dict',
+                            'description': 'this is the description for c',
+                        },
+                        'd': {
+                            'type': 'List',
+                            'description': 'this is the description for d',
+                        },
+                        'e': {
+                            'type': 'bool',
+                            'description': 'this is the description for e',
+                        },
+                        'f': {
+                            'type': 'float',
+                            'description': 'this is the description for f',
+                        },
+                        'g': {
+                            'type': 'List',
+                            'description': 'this is the description for g',
+                        },
+                        'h': {
+                            'type': 'List',
+                            'description': 'this is the description for h Default Value: `[\'1\', \'2\', \'3\']`',
+                        },
+                        # 'i': {
+                        #     'type': 'Union',
+                        #     'description': ' Default Value: `None`',
+                        # },
+
+                    },
+                    'required': ['a', 'b', 'c', 'd', 'e', 'f', 'g'],
+                }
                 }
             })
 
@@ -114,6 +116,49 @@ class TestTool(unittest.TestCase):
         with  self.assertRaisesRegex(DocStringException, "Return description not found in docstring of `[a-zA-Z\d_]*` function signature."):
             tool(return_required=True)(test)
 
+    def test_method(self):
+        
+        class Test:
+
+            @tool()
+            def test(self, a: str, b: int = 2) -> List[Union[str, int]]:
+                '''
+                This is a test function.
+
+                :param a: this is the description for a
+                :param b: this is the description for b
+
+                :returns: this is the description for return
+                '''
+                return [a, b]
+
+        t = Test()
+        self.assertEqual(
+            t.test.definition,
+            {
+            'type': 'function',
+                'function': {
+                    'name': 'test',
+                    'description': 'This is a test function.\n\nReturn Type: `List`\n\nReturn Description: this is the description for return',
+                    'parameters': {
+                        'type': 'object',
+                        'properties': {
+                            'a': {
+                                'type': 'str',
+                                'description': 'this is the description for a',
+                            },
+                            'b': {
+                                'type': 'int',
+                                'description': 'this is the description for b Default Value: `2`',
+                            },
+                        },
+                        'required': ['a']
+                    }
+                }
+            }
+        )
+
+
 class TestDefinedFunction(unittest.TestCase):
     
     def test_call(self):
@@ -122,6 +167,16 @@ class TestDefinedFunction(unittest.TestCase):
 
         definedFunction = DefinedFunction(test)
         self.assertEqual(definedFunction(1, b=2), [1, 2])
+
+    def test_call_method(self):
+
+        class Test:
+            @tool(self)
+            def test(self, a: int) -> int:
+                return a
+
+        t = Test()
+        self.assertEqual(t.test(5), 5)
 
 class TestGlobalToolConfig(unittest.TestCase):
     def test_default(self):

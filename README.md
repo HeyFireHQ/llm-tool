@@ -77,6 +77,28 @@ The definition for the function above will look like this:
 }
 ```
 
+### Use with methods
+```python
+fomr llm_tool import tool
+
+class TestClass:
+    
+    @tool(self)
+    def test_method(self, a: int = 0) -> None:
+        '''
+        This is a test method.
+
+        :param a: This is a test parameter.
+        '''
+        pass
+
+# get the definition from the class
+definition = TestClass.test_method.definition
+# or from an object
+t = TestClass()
+definition = t.test_method.definition
+```
+
 ### Groq API Example
 ```python
 from groq import Groq
@@ -220,3 +242,9 @@ def test2(a: int) -> None:
 
 ### Support
 Currently only docstrings in the [reST](https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html) format are supported, but support for more doscstring formats will be added in the future.
+
+### Roadmap
+<ul><li>- [ ] </li></ul> Add support for Union types
+<ul><li>- [ ] </li></ul> Add support for writing subtypes (e.g. `List[int]` instead of just `List`)
+<ul><li>- [ ] </li></ul> Support for more doscstring formats
+
