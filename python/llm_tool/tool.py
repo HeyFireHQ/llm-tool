@@ -68,7 +68,7 @@ def tool(context = None, desc_required: Union[bool, None] = None, return_require
         if func_params := inspect.signature(func).parameters:
 
             for key, value in func_params.items():
-                # ignore self
+
                 if key == 'self':
                     continue
 
