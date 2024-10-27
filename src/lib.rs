@@ -19,8 +19,9 @@ pub fn parse_docstring(docstring: &str) -> ParsedDocstring {
 
     let desc_re = Regex::new(r"([^:]*)").unwrap();
     let param_re = Regex::new(r"(?::param (?<name>[A-Za-z_]*):(?<desc>[^:]*))").unwrap();
-    let return_re = Regex::new(r"(?::return\w*:(?<desc>[^:]*))").unwrap();
-  
+    // let return_re = Regex::new(r"(?::return\w*:(?<desc>[^:]*))").unwrap();
+    let return_re = Regex::new(r"(?::return\w*:(?<desc>(?s).*))").unwrap();
+
     let description: String = String::from(desc_re.captures(docstring).unwrap()[0].trim());
     
     let mut params = HashMap::new();
@@ -70,10 +71,11 @@ mod tests {
         :param x: This is the description of x
         :param y: This is the description of y
         :return: This is the return description
+        example: this should be included
         ";
         let parsed_docstring = parse_docstring(docstring);
         assert_eq!(parsed_docstring.description, String::from("This is a description"));
-        assert_eq!(parsed_docstring.returns, String::from("This is the return description"));
+        assert_eq!(parsed_docstring.returns, String::from("This is the return description\n        example: this should be included"));
         assert_eq!(parsed_docstring.params, HashMap::from([(String::from("x"), String::from("This is the description of x")), (String::from("y"), String::from("This is the description of y"))]));
     }
 

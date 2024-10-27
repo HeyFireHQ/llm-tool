@@ -24,6 +24,7 @@ class TestTool(unittest.TestCase):
             :param h: this is the description for h
 
             :return: this is the description for return
+            Example: this part should be included into the return description.
             """
             pass
 
@@ -31,7 +32,7 @@ class TestTool(unittest.TestCase):
             'type': 'function',
             'function': {
                 'name': 'test',
-                'description': 'This is a test function.\n\nReturn Type: `Dict`\n\nReturn Description: this is the description for return',
+                'description': 'This is a test function.\n\nReturn Type: `Dict`\n\nReturn Description: this is the description for return\n            Example: this part should be included into the return description.',
                 'parameters': {
                     'type': 'object',
                     'properties': {
