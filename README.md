@@ -248,3 +248,5 @@ Currently only docstrings in the [reST](https://www.sphinx-doc.org/en/master/usa
 <ul><li>- [ ] </li></ul> Add support for writing subtypes (e.g. `List[int]` instead of just `List`)
 <ul><li>- [ ] </li></ul> Support for more doscstring formats
 
+### Contributing
+Get in touch with the author and maintainer [yiannisha](https://github.com/yiannisha)
